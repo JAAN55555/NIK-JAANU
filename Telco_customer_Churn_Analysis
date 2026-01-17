@@ -1,0 +1,1165 @@
+{
+  "metadata": {
+    "kernelspec": {
+      "language": "python",
+      "display_name": "Python 3",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.11.13",
+      "mimetype": "text/x-python",
+      "codemirror_mode": {
+        "name": "ipython",
+        "version": 3
+      },
+      "pygments_lexer": "ipython3",
+      "nbconvert_exporter": "python",
+      "file_extension": ".py"
+    },
+    "kaggle": {
+      "accelerator": "none",
+      "dataSources": [
+        {
+          "sourceId": 18858,
+          "sourceType": "datasetVersion",
+          "datasetId": 13996
+        }
+      ],
+      "dockerImageVersionId": 31234,
+      "isInternetEnabled": false,
+      "language": "python",
+      "sourceType": "notebook",
+      "isGpuEnabled": false
+    },
+    "colab": {
+      "name": "Telco customer Churn Analysis 3ef535",
+      "provenance": [],
+      "include_colab_link": true
+    }
+  },
+  "nbformat_minor": 0,
+  "nbformat": 4,
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/JAAN55555/NIK-JAANU/blob/main/Telco_customer_Churn_Analysis\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "source": [
+        "# IMPORTANT: RUN THIS CELL IN ORDER TO IMPORT YOUR KAGGLE DATA SOURCES,\n",
+        "# THEN FEEL FREE TO DELETE THIS CELL.\n",
+        "# NOTE: THIS NOTEBOOK ENVIRONMENT DIFFERS FROM KAGGLE'S PYTHON\n",
+        "# ENVIRONMENT SO THERE MAY BE MISSING LIBRARIES USED BY YOUR\n",
+        "# NOTEBOOK.\n",
+        "import kagglehub\n",
+        "blastchar_telco_customer_churn_path = kagglehub.dataset_download('blastchar/telco-customer-churn')\n",
+        "\n",
+        "print('Data source import complete.')"
+      ],
+      "metadata": {
+        "id": "mBXy-FEx1p6m",
+        "outputId": "c2207c26-9c2a-4110-a50b-d6259324f286",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "cell_type": "code",
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Using Colab cache for faster access to the 'telco-customer-churn' dataset.\n",
+            "Data source import complete.\n"
+          ]
+        }
+      ],
+      "execution_count": 1
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# This Python 3 environment comes with many helpful analytics libraries installed\n",
+        "# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python\n",
+        "# For example, here's several helpful packages to load\n",
+        "\n",
+        "import numpy as np # linear algebra\n",
+        "import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)\n",
+        "\n",
+        "# Input data files are available in the read-only \"../input/\" directory\n",
+        "# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory\n",
+        "\n",
+        "import os\n",
+        "for dirname, _, filenames in os.walk('/kaggle/input'):\n",
+        "    for filename in filenames:\n",
+        "        print(os.path.join(dirname, filename))\n",
+        "\n",
+        "# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using \"Save & Run All\"\n",
+        "# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session"
+      ],
+      "metadata": {
+        "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+        "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.514894Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.515177Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.531005Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.515159Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.529747Z"
+        },
+        "id": "yM5j58o-1p6q",
+        "outputId": "ab52177b-89a9-444d-fd4d-8c7525851e49",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/kaggle/input/telco-customer-churn/WA_Fn-UseC_-Telco-Customer-Churn.csv\n"
+          ]
+        }
+      ],
+      "execution_count": 2
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Import Libraries\n"
+      ],
+      "metadata": {
+        "id": "14YzWab61p6r"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "import warnings\n",
+        "warnings.filterwarnings('ignore')"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.609038Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.609919Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.614766Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.609888Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.613528Z"
+        },
+        "id": "wakoZKAo1p6t"
+      },
+      "outputs": [],
+      "execution_count": 3
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Reading Data\n",
+        "\n"
+      ],
+      "metadata": {
+        "id": "2Cysg7sA1p6u"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df = pd.read_csv(\"/kaggle/input/telco-customer-churn/WA_Fn-UseC_-Telco-Customer-Churn.csv\")\n",
+        "df"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.623961Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.624699Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.695089Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.624666Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.694053Z"
+        },
+        "id": "y0ydSfbP1p6u",
+        "outputId": "21e517b8-e251-47d0-ec16-39c8bdd7a8dd",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 582
+        }
+      },
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "      customerID  gender  SeniorCitizen Partner Dependents  tenure  \\\n",
+              "0     7590-VHVEG  Female              0     Yes         No       1   \n",
+              "1     5575-GNVDE    Male              0      No         No      34   \n",
+              "2     3668-QPYBK    Male              0      No         No       2   \n",
+              "3     7795-CFOCW    Male              0      No         No      45   \n",
+              "4     9237-HQITU  Female              0      No         No       2   \n",
+              "...          ...     ...            ...     ...        ...     ...   \n",
+              "7038  6840-RESVB    Male              0     Yes        Yes      24   \n",
+              "7039  2234-XADUH  Female              0     Yes        Yes      72   \n",
+              "7040  4801-JZAZL  Female              0     Yes        Yes      11   \n",
+              "7041  8361-LTMKD    Male              1     Yes         No       4   \n",
+              "7042  3186-AJIEK    Male              0      No         No      66   \n",
+              "\n",
+              "     PhoneService     MultipleLines InternetService OnlineSecurity  ...  \\\n",
+              "0              No  No phone service             DSL             No  ...   \n",
+              "1             Yes                No             DSL            Yes  ...   \n",
+              "2             Yes                No             DSL            Yes  ...   \n",
+              "3              No  No phone service             DSL            Yes  ...   \n",
+              "4             Yes                No     Fiber optic             No  ...   \n",
+              "...           ...               ...             ...            ...  ...   \n",
+              "7038          Yes               Yes             DSL            Yes  ...   \n",
+              "7039          Yes               Yes     Fiber optic             No  ...   \n",
+              "7040           No  No phone service             DSL            Yes  ...   \n",
+              "7041          Yes               Yes     Fiber optic             No  ...   \n",
+              "7042          Yes                No     Fiber optic            Yes  ...   \n",
+              "\n",
+              "     DeviceProtection TechSupport StreamingTV StreamingMovies        Contract  \\\n",
+              "0                  No          No          No              No  Month-to-month   \n",
+              "1                 Yes          No          No              No        One year   \n",
+              "2                  No          No          No              No  Month-to-month   \n",
+              "3                 Yes         Yes          No              No        One year   \n",
+              "4                  No          No          No              No  Month-to-month   \n",
+              "...               ...         ...         ...             ...             ...   \n",
+              "7038              Yes         Yes         Yes             Yes        One year   \n",
+              "7039              Yes          No         Yes             Yes        One year   \n",
+              "7040               No          No          No              No  Month-to-month   \n",
+              "7041               No          No          No              No  Month-to-month   \n",
+              "7042              Yes         Yes         Yes             Yes        Two year   \n",
+              "\n",
+              "     PaperlessBilling              PaymentMethod MonthlyCharges  TotalCharges  \\\n",
+              "0                 Yes           Electronic check          29.85         29.85   \n",
+              "1                  No               Mailed check          56.95        1889.5   \n",
+              "2                 Yes               Mailed check          53.85        108.15   \n",
+              "3                  No  Bank transfer (automatic)          42.30       1840.75   \n",
+              "4                 Yes           Electronic check          70.70        151.65   \n",
+              "...               ...                        ...            ...           ...   \n",
+              "7038              Yes               Mailed check          84.80        1990.5   \n",
+              "7039              Yes    Credit card (automatic)         103.20        7362.9   \n",
+              "7040              Yes           Electronic check          29.60        346.45   \n",
+              "7041              Yes               Mailed check          74.40         306.6   \n",
+              "7042              Yes  Bank transfer (automatic)         105.65        6844.5   \n",
+              "\n",
+              "     Churn  \n",
+              "0       No  \n",
+              "1       No  \n",
+              "2      Yes  \n",
+              "3       No  \n",
+              "4      Yes  \n",
+              "...    ...  \n",
+              "7038    No  \n",
+              "7039    No  \n",
+              "7040    No  \n",
+              "7041   Yes  \n",
+              "7042    No  \n",
+              "\n",
+              "[7043 rows x 21 columns]"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-34b79a11-545a-4159-b832-319309daeefd\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>customerID</th>\n",
+              "      <th>gender</th>\n",
+              "      <th>SeniorCitizen</th>\n",
+              "      <th>Partner</th>\n",
+              "      <th>Dependents</th>\n",
+              "      <th>tenure</th>\n",
+              "      <th>PhoneService</th>\n",
+              "      <th>MultipleLines</th>\n",
+              "      <th>InternetService</th>\n",
+              "      <th>OnlineSecurity</th>\n",
+              "      <th>...</th>\n",
+              "      <th>DeviceProtection</th>\n",
+              "      <th>TechSupport</th>\n",
+              "      <th>StreamingTV</th>\n",
+              "      <th>StreamingMovies</th>\n",
+              "      <th>Contract</th>\n",
+              "      <th>PaperlessBilling</th>\n",
+              "      <th>PaymentMethod</th>\n",
+              "      <th>MonthlyCharges</th>\n",
+              "      <th>TotalCharges</th>\n",
+              "      <th>Churn</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>7590-VHVEG</td>\n",
+              "      <td>Female</td>\n",
+              "      <td>0</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>1</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No phone service</td>\n",
+              "      <td>DSL</td>\n",
+              "      <td>No</td>\n",
+              "      <td>...</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Month-to-month</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Electronic check</td>\n",
+              "      <td>29.85</td>\n",
+              "      <td>29.85</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>5575-GNVDE</td>\n",
+              "      <td>Male</td>\n",
+              "      <td>0</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>34</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>DSL</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>...</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>One year</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Mailed check</td>\n",
+              "      <td>56.95</td>\n",
+              "      <td>1889.5</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>3668-QPYBK</td>\n",
+              "      <td>Male</td>\n",
+              "      <td>0</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>2</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>DSL</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>...</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Month-to-month</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Mailed check</td>\n",
+              "      <td>53.85</td>\n",
+              "      <td>108.15</td>\n",
+              "      <td>Yes</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>7795-CFOCW</td>\n",
+              "      <td>Male</td>\n",
+              "      <td>0</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>45</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No phone service</td>\n",
+              "      <td>DSL</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>...</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>One year</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Bank transfer (automatic)</td>\n",
+              "      <td>42.30</td>\n",
+              "      <td>1840.75</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>9237-HQITU</td>\n",
+              "      <td>Female</td>\n",
+              "      <td>0</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>2</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Fiber optic</td>\n",
+              "      <td>No</td>\n",
+              "      <td>...</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Month-to-month</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Electronic check</td>\n",
+              "      <td>70.70</td>\n",
+              "      <td>151.65</td>\n",
+              "      <td>Yes</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>...</th>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "      <td>...</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7038</th>\n",
+              "      <td>6840-RESVB</td>\n",
+              "      <td>Male</td>\n",
+              "      <td>0</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>24</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>DSL</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>...</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>One year</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Mailed check</td>\n",
+              "      <td>84.80</td>\n",
+              "      <td>1990.5</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7039</th>\n",
+              "      <td>2234-XADUH</td>\n",
+              "      <td>Female</td>\n",
+              "      <td>0</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>72</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Fiber optic</td>\n",
+              "      <td>No</td>\n",
+              "      <td>...</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>One year</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Credit card (automatic)</td>\n",
+              "      <td>103.20</td>\n",
+              "      <td>7362.9</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7040</th>\n",
+              "      <td>4801-JZAZL</td>\n",
+              "      <td>Female</td>\n",
+              "      <td>0</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>11</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No phone service</td>\n",
+              "      <td>DSL</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>...</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Month-to-month</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Electronic check</td>\n",
+              "      <td>29.60</td>\n",
+              "      <td>346.45</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7041</th>\n",
+              "      <td>8361-LTMKD</td>\n",
+              "      <td>Male</td>\n",
+              "      <td>1</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>4</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Fiber optic</td>\n",
+              "      <td>No</td>\n",
+              "      <td>...</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Month-to-month</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Mailed check</td>\n",
+              "      <td>74.40</td>\n",
+              "      <td>306.6</td>\n",
+              "      <td>Yes</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>7042</th>\n",
+              "      <td>3186-AJIEK</td>\n",
+              "      <td>Male</td>\n",
+              "      <td>0</td>\n",
+              "      <td>No</td>\n",
+              "      <td>No</td>\n",
+              "      <td>66</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>No</td>\n",
+              "      <td>Fiber optic</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>...</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Two year</td>\n",
+              "      <td>Yes</td>\n",
+              "      <td>Bank transfer (automatic)</td>\n",
+              "      <td>105.65</td>\n",
+              "      <td>6844.5</td>\n",
+              "      <td>No</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "<p>7043 rows × 21 columns</p>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-34b79a11-545a-4159-b832-319309daeefd')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-34b79a11-545a-4159-b832-319309daeefd button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-34b79a11-545a-4159-b832-319309daeefd');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "  <div id=\"id_7170fb0c-5a8b-44da-a3d9-52fb9926be9c\">\n",
+              "    <style>\n",
+              "      .colab-df-generate {\n",
+              "        background-color: #E8F0FE;\n",
+              "        border: none;\n",
+              "        border-radius: 50%;\n",
+              "        cursor: pointer;\n",
+              "        display: none;\n",
+              "        fill: #1967D2;\n",
+              "        height: 32px;\n",
+              "        padding: 0 0 0 0;\n",
+              "        width: 32px;\n",
+              "      }\n",
+              "\n",
+              "      .colab-df-generate:hover {\n",
+              "        background-color: #E2EBFA;\n",
+              "        box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "        fill: #174EA6;\n",
+              "      }\n",
+              "\n",
+              "      [theme=dark] .colab-df-generate {\n",
+              "        background-color: #3B4455;\n",
+              "        fill: #D2E3FC;\n",
+              "      }\n",
+              "\n",
+              "      [theme=dark] .colab-df-generate:hover {\n",
+              "        background-color: #434B5C;\n",
+              "        box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "        filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "        fill: #FFFFFF;\n",
+              "      }\n",
+              "    </style>\n",
+              "    <button class=\"colab-df-generate\" onclick=\"generateWithVariable('df')\"\n",
+              "            title=\"Generate code using this dataframe.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\"viewBox=\"0 0 24 24\"\n",
+              "       width=\"24px\">\n",
+              "    <path d=\"M7,19H8.4L18.45,9,17,7.55,7,17.6ZM5,21V16.75L18.45,3.32a2,2,0,0,1,2.83,0l1.4,1.43a1.91,1.91,0,0,1,.58,1.4,1.91,1.91,0,0,1-.58,1.4L9.25,21ZM18.45,9,17,7.55Zm-12,3A5.31,5.31,0,0,0,4.9,8.1,5.31,5.31,0,0,0,1,6.5,5.31,5.31,0,0,0,4.9,4.9,5.31,5.31,0,0,0,6.5,1,5.31,5.31,0,0,0,8.1,4.9,5.31,5.31,0,0,0,12,6.5,5.46,5.46,0,0,0,6.5,12Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "    <script>\n",
+              "      (() => {\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#id_7170fb0c-5a8b-44da-a3d9-52fb9926be9c button.colab-df-generate');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      buttonEl.onclick = () => {\n",
+              "        google.colab.notebook.generateWithVariable('df');\n",
+              "      }\n",
+              "      })();\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "df"
+            }
+          },
+          "metadata": {},
+          "execution_count": 4
+        }
+      ],
+      "execution_count": 4
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Data Exploration"
+      ],
+      "metadata": {
+        "id": "o2Etl5e21p6v"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.head()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.696873Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.697175Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.717934Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.697154Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.716802Z"
+        },
+        "id": "JHHw0X071p6v"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.tail()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.719326Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.71966Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.752501Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.719631Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.751507Z"
+        },
+        "id": "3XxNavkc1p6w"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.shape"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.753551Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.753881Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.777202Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.75385Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.776078Z"
+        },
+        "id": "TfhDANn-1p6w"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.info()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.779173Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.779606Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.812384Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.779555Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.811342Z"
+        },
+        "id": "t55yOUwb1p6x"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "list(df.columns)"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.813343Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.813643Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.821454Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.813613Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.820361Z"
+        },
+        "id": "iOPWTGvB1p6x"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.drop(\"customerID\", axis=1, inplace=True)\n"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.822788Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.823146Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.846499Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.823116Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.845587Z"
+        },
+        "id": "YY9c0YCI1p6x"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Data columns describtion"
+      ],
+      "metadata": {
+        "id": "yd2cdUN21p6y"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "#customerID..\tUnique identifier for each customer\n",
+        "#gender..\tCustomer gender\n",
+        "#SeniorCitizen..\tIndicates whether the customer is a senior citizen\n",
+        "#Partner..\tWhether the customer has a partner\n",
+        "#Dependents..\tWhether the customer has dependents\n",
+        "#tenure..\tNumber of months the customer has stayed with the company\n",
+        "#PhoneService..\tWhether the customer has phone service\n",
+        "#MultipleLines..\tWhether the customer has multiple phone lines\n",
+        "#InternetService..\tType of internet service\n",
+        "#OnlineSecurity..\tWhether the customer has online security service\n",
+        "#OnlineBackup..\tWhether the customer has online backup service\n",
+        "#DeviceProtection..\tWhether the customer has device protection service\n",
+        "#TechSupport..\tWhether the customer has technical support service\n",
+        "#StreamingTV..\tWhether the customer has streaming TV service\n",
+        "#StreamingMovies..\tWhether the customer has streaming movies service\n",
+        "#Contract..\tType of customer contract\n",
+        "#PaperlessBilling..\tWhether the customer uses paperless billing\n",
+        "#PaymentMethod..\tMethod used by the customer for payment\n",
+        "#MonthlyCharges..\tMonthly amount charged to the customer\n",
+        "#TotalCharges..\tTotal amount charged to the customer\n",
+        "#Churn..\tIndicates whether the customer left the company\n"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.847457Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.84775Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.86739Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.847726Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.866486Z"
+        },
+        "id": "HLiuelvO1p6y"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.describe()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.868831Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.869076Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.915861Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.869057Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.914849Z"
+        },
+        "id": "orm0C1EH1p6y"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.describe(include=\"O\")"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.918217Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.9186Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.979592Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.918578Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.978234Z"
+        },
+        "id": "eSWgvW9r1p6y"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df['Churn'].value_counts().to_frame()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.98105Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.981421Z",
+          "iopub.status.idle": "2026-01-04T01:13:35.99129Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.981392Z",
+          "shell.execute_reply": "2026-01-04T01:13:35.990222Z"
+        },
+        "id": "NPfyG37q1p6z"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Duplicate Entries\n"
+      ],
+      "metadata": {
+        "id": "rAiuC6GK1p6z"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.duplicated().sum()\n"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:35.992387Z",
+          "iopub.execute_input": "2026-01-04T01:13:35.992731Z",
+          "iopub.status.idle": "2026-01-04T01:13:36.028715Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:35.992709Z",
+          "shell.execute_reply": "2026-01-04T01:13:36.027616Z"
+        },
+        "id": "mTbGTV2E1p6z"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Null values in the dataset"
+      ],
+      "metadata": {
+        "id": "dWUkeAEb1p6z"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df.isnull().sum().to_frame()\n"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:36.029522Z",
+          "iopub.execute_input": "2026-01-04T01:13:36.029735Z",
+          "iopub.status.idle": "2026-01-04T01:13:36.047723Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:36.029718Z",
+          "shell.execute_reply": "2026-01-04T01:13:36.046697Z"
+        },
+        "id": "vV1TrGUs1p6z"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Visualization"
+      ],
+      "metadata": {
+        "id": "YDSmiI221p6z"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "df['Churn'].value_counts().plot(kind='pie',autopct=\"%0.02f%%\")"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:13:36.048939Z",
+          "iopub.execute_input": "2026-01-04T01:13:36.049335Z",
+          "iopub.status.idle": "2026-01-04T01:13:36.158618Z",
+          "shell.execute_reply.started": "2026-01-04T01:13:36.04931Z",
+          "shell.execute_reply": "2026-01-04T01:13:36.15735Z"
+        },
+        "id": "2M6Ui1Nf1p6z"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Cols=[\"tenure\", \"MonthlyCharges\"]\n",
+        "for col in Cols :\n",
+        "    plt.figure(figsize=(8,6))\n",
+        "    sns.histplot(df[col], kde=True , bins=15 , color= \"blue\")\n",
+        "    plt.xlabel(col)\n",
+        "    plt.show()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:23:19.372835Z",
+          "iopub.execute_input": "2026-01-04T01:23:19.374186Z",
+          "iopub.status.idle": "2026-01-04T01:23:21.044535Z",
+          "shell.execute_reply.started": "2026-01-04T01:23:19.374151Z",
+          "shell.execute_reply": "2026-01-04T01:23:21.043187Z"
+        },
+        "id": "pyP4LfMl1p6z"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "plt.figure(figsize=(8,6))\n",
+        "sns.countplot(x=\"Churn\", data=df, color=\"blue\")\n",
+        "plt.xlabel(\"Churn\")\n",
+        "plt.ylabel(\"Count\")\n",
+        "plt.title(\"Distribution of Churn\")\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:25:46.991012Z",
+          "iopub.execute_input": "2026-01-04T01:25:46.991769Z",
+          "iopub.status.idle": "2026-01-04T01:25:47.141551Z",
+          "shell.execute_reply.started": "2026-01-04T01:25:46.99174Z",
+          "shell.execute_reply": "2026-01-04T01:25:47.140673Z"
+        },
+        "id": "etW9JMHU1p60"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "plt.figure(figsize=(8,6))\n",
+        "sns.boxplot(x=\"Churn\", y=\"tenure\", data=df)\n",
+        "plt.title(\"Tenure Distribution by Churn Status\")\n",
+        "plt.xlabel(\"Churn\")\n",
+        "plt.ylabel(\"Tenure\")\n",
+        "plt.show()\n"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:37:14.83075Z",
+          "iopub.execute_input": "2026-01-04T01:37:14.831865Z",
+          "iopub.status.idle": "2026-01-04T01:37:15.007529Z",
+          "shell.execute_reply.started": "2026-01-04T01:37:14.831831Z",
+          "shell.execute_reply": "2026-01-04T01:37:15.006271Z"
+        },
+        "id": "L-330tVQ1p60"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "plt.figure(figsize=(8,6))\n",
+        "sns.heatmap(df.corr(numeric_only=True), annot=True, cmap=\"coolwarm\")\n",
+        "plt.title('Correlation  of Telco dataset')\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:30:32.958152Z",
+          "iopub.execute_input": "2026-01-04T01:30:32.958484Z",
+          "iopub.status.idle": "2026-01-04T01:30:33.202782Z",
+          "shell.execute_reply.started": "2026-01-04T01:30:32.958462Z",
+          "shell.execute_reply": "2026-01-04T01:30:33.201472Z"
+        },
+        "id": "XNrtcN3E1p60"
+      },
+      "outputs": [],
+      "execution_count": null
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "plt.figure(figsize=(8,6))\n",
+        "sns.countplot(x=\"InternetService\", hue=\"Churn\", data=df)\n",
+        "plt.title(\"Customer Churn by Internet Service Type\")\n",
+        "plt.xlabel(\"Internet Service Type\")\n",
+        "plt.ylabel(\"Number of Customers\")\n",
+        "plt.show()\n"
+      ],
+      "metadata": {
+        "trusted": true,
+        "execution": {
+          "iopub.status.busy": "2026-01-04T01:38:27.644233Z",
+          "iopub.execute_input": "2026-01-04T01:38:27.644617Z",
+          "iopub.status.idle": "2026-01-04T01:38:27.86972Z",
+          "shell.execute_reply.started": "2026-01-04T01:38:27.644593Z",
+          "shell.execute_reply": "2026-01-04T01:38:27.868644Z"
+        },
+        "id": "dBqPt2yL1p60"
+      },
+      "outputs": [],
+      "execution_count": null
+    }
+  ]
+}
